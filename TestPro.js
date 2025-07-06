@@ -878,11 +878,12 @@ app.patch('/api/tokens/mark-used/:token', async (req, res) => {
   }
 });
 
-// ✅ Sample GET Route
+// 🟢 Default Route
 app.get("/", (req, res) => {
-  res.send("✅ CBT & Token Server is running");
+  res.send("✅ CBT System + Payment API is running!");
 });
 
-
-// ✅ Start server
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// 🟢 Start the Server
+app.listen(PORT, () => {
+  console.log(`🚀 Server is live on port ${PORT}`);
+});
