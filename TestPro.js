@@ -254,7 +254,7 @@ app.post("/api/students/login", async (req, res) => {
     return res.status(401).json({ message: "Invalid matric number or password." });
   }
 
-  // Check if this student's department and level is allowed
+  // 1. ✅ Check if this student's department and level is allowed
   const isAllowed = await AllowedGroup.findOne({
     department: student.department,
     level: student.level,
@@ -265,6 +265,14 @@ app.post("/api/students/login", async (req, res) => {
     return res.status(403).json({ message: "Your department and level is currently restricted from accessing the exam." });
   }
 
+  // 2. ✅ Check if student is scheduled
+  const isScheduled = await ScheduledStudent.findOne({ matric: student.matric });
+
+  if (!isScheduled) {
+    return res.status(403).json({ message: "You are not scheduled for this exam." });
+  }
+
+  // 3. ✅ Passed all checks — allow login
   studentSessions.add(matric);
   res.json({ message: "Login successful", student });
 });
