@@ -120,6 +120,12 @@ const tokenSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'success', 'used'], default: 'pending' },
   createdAt: { type: Date, default: Date.now },
 });
+const adminSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+});
+
+
 
 // ✅ MODELS
 const Student = mongoose.model("Student", studentSchema);
@@ -131,7 +137,8 @@ const ScheduledStudent = mongoose.model("ScheduledStudent", scheduledSchema);
 const SessionControl = mongoose.model("SessionControl", sessionSchema);
 const Transaction = mongoose.model("Transaction", transactionSchema);
 const Token = mongoose.model("Token", tokenSchema);
-
+const studentSessions = new Set();
+const Admin = mongoose.model("Admin", adminSchema);
 // Routes
 
 // Department mapping
