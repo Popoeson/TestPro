@@ -510,25 +510,18 @@ app.get("/api/admin/access-groups", async (req, res) => {
   }
 });
 
-// 📥 Upload Scheduled Students (Excel)
-// ✅ CORS Preflight (no custom options)
-app.options("/api/schedule/upload", cors());
-
 // ✅ Upload Scheduled Students via Excel
 app.post("/api/schedule/upload", cors(), scheduleUpload.single("file"), async (req, res) => {
   try {
-    // 🧾 Validate file extension
     const ext = path.extname(req.file.originalname);
     if (![".xlsx", ".xls"].includes(ext)) {
       return res.status(400).json({ message: "Invalid file type. Please upload an Excel file." });
     }
 
-    // 🗂 Read Excel file
     const workbook = XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    // 🔄 Bulk update or insert students
     const bulkOps = data.map((row) => ({
       updateOne: {
         filter: { matric: row.matric },
@@ -542,17 +535,7 @@ app.post("/api/schedule/upload", cors(), scheduleUpload.single("file"), async (r
       }
     }));
 
-    // 🗃 Use ScheduledStudent model
-    const ScheduledStudent = mongoose.model("ScheduledStudent");
-    await ScheduledStudent.bulkWrite(bulkOps);
-
-    res.json({ message: "Scheduled students uploaded successfully" });
-  } catch (err) {
-    console.error("Excel Upload Error:", err.stack || err);
-    res.status(500).json({ message: "Failed to upload students" });
-  }
-});
-    await ScheduledStudent.bulkWrite(bulkOps);
+    await ScheduledStudent.bulkWrite(bulkOps); 
 
     res.json({ message: "Scheduled students uploaded successfully" });
 
