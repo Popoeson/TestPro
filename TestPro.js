@@ -552,10 +552,6 @@ app.post("/api/schedule/upload", cors(), scheduleUpload.single("file"), async (r
     res.status(500).json({ message: "Failed to upload students" });
   }
 });
-
-
-    // Either import ScheduledStudent at top, or use this line if registered globally
-    const ScheduledStudent = mongoose.model("ScheduledStudent");
     await ScheduledStudent.bulkWrite(bulkOps);
 
     res.json({ message: "Scheduled students uploaded successfully" });
