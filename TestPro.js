@@ -125,6 +125,12 @@ const adminSchema = new mongoose.Schema({
   password: String,
 });
 
+const settingsSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  value: mongoose.Schema.Types.Mixed,
+});
+
+module.exports = mongoose.model("Settings", settingsSchema);
 
 
 // ✅ MODELS
@@ -139,6 +145,7 @@ const Transaction = mongoose.model("Transaction", transactionSchema);
 const Token = mongoose.model("Token", tokenSchema);
 const studentSessions = new Set();
 const Admin = mongoose.model("Admin", adminSchema);
+const Settings = require("./models/Settings"); 
 // Routes
 
 // Department mapping
@@ -565,6 +572,38 @@ app.get("/api/admin/access-control-status", async (req, res) => {
     res.json({ accessControlEnabled: settings.accessControlEnabled });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch access control status." });
+  }
+});
+
+// POST: toggle global access control
+app.post("/api/admin/access-control-toggle", async (req, res) => {
+  const { enabled } = req.body;
+
+  if (typeof enabled !== "boolean") {
+    return res.status(400).json({ message: "Invalid value for 'enabled'" });
+  }
+
+  try {
+    const setting = await Settings.findOneAndUpdate(
+      { key: "globalAccessControl" },
+      { value: enabled },
+      { upsert: true, new: true }
+    );
+
+    res.json({ message: `Global access control set to ${enabled ? "ON" : "OFF"}` });
+  } catch (err) {
+    console.error("Toggle error:", err);
+    res.status(500).json({ message: "Failed to update access control status." });
+  }
+});
+
+// GET: fetch current global access control setting
+app.get("/api/admin/access-control-toggle", async (req, res) => {
+  try {
+    const setting = await Settings.findOne({ key: "globalAccessControl" });
+    res.json({ enabled: setting ? setting.value : true });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to retrieve toggle state." });
   }
 });
 
