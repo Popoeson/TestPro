@@ -568,8 +568,6 @@ app.get("/api/admin/access-control-status", async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // ✅ Upload Scheduled Students via Excel
 app.post("/api/schedule/upload", cors(), scheduleUpload.single("file"), async (req, res) => {
   try {
