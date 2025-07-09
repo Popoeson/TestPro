@@ -495,28 +495,34 @@ app.get("/api/exams/:courseCode", async (req, res) => {
   }
 });
 
-// Set access for a group (allow or block)
-app.post("/api/admin/access-control", async (req, res) => {
+
+// ✅ Save access for a department + level (allow or block)
+router.post("/api/admin/access-control", async (req, res) => {
   const { department, level, status } = req.body;
 
   if (!department || !level || !status) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
-  const existing = await AllowedGroup.findOne({ department, level });
+  try {
+    const existing = await AllowedGroup.findOne({ department, level });
 
-  if (existing) {
-    existing.status = status;
-    await existing.save();
-  } else {
-    await AllowedGroup.create({ department, level, status });
+    if (existing) {
+      existing.status = status;
+      await existing.save();
+    } else {
+      await AllowedGroup.create({ department, level, status });
+    }
+
+    res.json({ message: `Access for ${department} ${level} set to ${status}.` });
+  } catch (err) {
+    console.error("Access control error:", err);
+    res.status(500).json({ message: "Error saving access rule." });
   }
-
-  res.json({ message: `Access for ${department} ${level} set to ${status}.` });
 });
 
-// Fetch all department-level access rules
-app.get("/api/admin/access-groups", async (req, res) => {
+// ✅ Get all access rules
+router.get("/api/admin/access-groups", async (req, res) => {
   try {
     const rules = await AllowedGroup.find();
     res.json(rules);
@@ -524,6 +530,45 @@ app.get("/api/admin/access-groups", async (req, res) => {
     res.status(500).json({ message: "Failed to load access groups." });
   }
 });
+
+// ✅ Toggle global access control ON/OFF
+router.post("/api/admin/toggle-access-control", async (req, res) => {
+  const { enabled } = req.body;
+
+  if (typeof enabled !== "boolean") {
+    return res.status(400).json({ message: "Invalid toggle value." });
+  }
+
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) settings = new Settings();
+
+    settings.accessControlEnabled = enabled;
+    await settings.save();
+
+    res.json({ message: `Access control ${enabled ? "enabled" : "disabled"}` });
+  } catch (err) {
+    console.error("Toggle error:", err);
+    res.status(500).json({ message: "Failed to update access control status." });
+  }
+});
+
+// ✅ Get current access control toggle status
+router.get("/api/admin/access-control-status", async (req, res) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings();
+      await settings.save();
+    }
+
+    res.json({ accessControlEnabled: settings.accessControlEnabled });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch access control status." });
+  }
+});
+
+module.exports = router;
 
 // ✅ Upload Scheduled Students via Excel
 app.post("/api/schedule/upload", cors(), scheduleUpload.single("file"), async (req, res) => {
