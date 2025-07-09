@@ -497,7 +497,7 @@ app.get("/api/exams/:courseCode", async (req, res) => {
 
 
 // ✅ Save access for a department + level (allow or block)
-router.post("/api/admin/access-control", async (req, res) => {
+app.post("/api/admin/access-control", async (req, res) => {
   const { department, level, status } = req.body;
 
   if (!department || !level || !status) {
@@ -522,7 +522,7 @@ router.post("/api/admin/access-control", async (req, res) => {
 });
 
 // ✅ Get all access rules
-router.get("/api/admin/access-groups", async (req, res) => {
+app.get("/api/admin/access-groups", async (req, res) => {
   try {
     const rules = await AllowedGroup.find();
     res.json(rules);
@@ -532,7 +532,7 @@ router.get("/api/admin/access-groups", async (req, res) => {
 });
 
 // ✅ Toggle global access control ON/OFF
-router.post("/api/admin/toggle-access-control", async (req, res) => {
+app.post("/api/admin/toggle-access-control", async (req, res) => {
   const { enabled } = req.body;
 
   if (typeof enabled !== "boolean") {
@@ -554,7 +554,7 @@ router.post("/api/admin/toggle-access-control", async (req, res) => {
 });
 
 // ✅ Get current access control toggle status
-router.get("/api/admin/access-control-status", async (req, res) => {
+app.get("/api/admin/access-control-status", async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) {
