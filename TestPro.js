@@ -127,11 +127,8 @@ const adminSchema = new mongoose.Schema({
 
 const settingsSchema = new mongoose.Schema({
   key: { type: String, required: true, unique: true },
-  value: mongoose.Schema.Types.Mixed,
+  value: mongoose.Schema.Types.Mixed
 });
-
-module.exports = mongoose.model("Settings", settingsSchema);
-
 
 // ✅ MODELS
 const Student = mongoose.model("Student", studentSchema);
@@ -145,7 +142,7 @@ const Transaction = mongoose.model("Transaction", transactionSchema);
 const Token = mongoose.model("Token", tokenSchema);
 const studentSessions = new Set();
 const Admin = mongoose.model("Admin", adminSchema);
-const Settings = require("./models/Settings"); 
+const Settings = mongoose.model("Settings", settingsSchema);
 // Routes
 
 // Department mapping
