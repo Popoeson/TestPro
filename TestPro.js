@@ -487,53 +487,7 @@ app.get("/api/exams/:courseCode", async (req, res) => {
   }
 });
 
-  // Submit Exam
-  app.post("/api/exams/:courseCode/submit", async (req, res) => {
-  const { courseCode } = req.params;
-  const { studentMatric, answers } = req.body;
-
-  if (!studentMatric || !answers || typeof answers !== "object") {
-    return res.status(400).json({ message: "Invalid submission data." });
-  }
-
-  try {
-    // Check if student already submitted for this course
-    const alreadySubmitted = await Result.findOne({ studentMatric, courseCode });
-
-    if (alreadySubmitted) {
-      return res.status(409).json({ 
-        message: "You have already submitted this exam." 
-      });
-    }
-
-    // Continue with scoring and saving
-    const questions = await Question.find({ courseCode });
-    let score = 0;
-    questions.forEach((q) => {
-      if (answers[q._id] && answers[q._id] === q.correctAnswer) {
-        score++;
-      }
-    });
-
-    const result = new Result({
-      studentMatric,
-      courseCode,
-      score,
-      total: questions.length,
-    });
-
-    await result.save();
-
-    res.json({
-      message: "Exam submitted successfully",
-      score,
-      total: questions.length,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to submit exam." });
-  }
-});
-
+  
 //Submission Queue Route
 async function processNextSubmission() {
   if (submissionQueue.length === 0 || activeSubmissions >= MAX_CONCURRENT_SUBMISSIONS) return;
@@ -564,6 +518,11 @@ async function processNextSubmission() {
     processNextSubmission(); // Automatically move to the next in queue
   }
 }
+//✅ Submit Exam 
+app.post("/api/exams/:courseCode/submit", (req, res) => {
+  submissionQueue.push({ req, res });
+  processNextSubmission();
+});
 
 // ✅ Save access for a department + level (allow or block)
 app.post("/api/admin/access-control", async (req, res) => {
