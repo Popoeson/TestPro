@@ -75,6 +75,15 @@ const examSchema = new mongoose.Schema({
   numQuestions: Number,
 });
 
+const submissionSchema = new mongoose.Schema({
+  matric: { type: String, required: true },
+  name: { type: String, required: true },
+  department: { type: String, required: true },
+  courseCode: { type: String, required: true },
+  answers: { type: Object, required: true },
+  submittedAt: { type: Date, default: Date.now }
+});
+
 const questionSchema = new mongoose.Schema({
   courseCode: String,
   course: String,
@@ -139,6 +148,7 @@ const settingsSchema = new mongoose.Schema({
 const Student = mongoose.model("Student", studentSchema);
 const Exam = mongoose.model("Exam", examSchema);
 const Question = mongoose.model("Question", questionSchema);
+const Submission = mongoose.model("Submission", submissionSchema);
 const Result = mongoose.model("Result", resultSchema);
 const AllowedGroup = mongoose.model("AllowedGroup", allowedGroupSchema);
 const ScheduledStudent = mongoose.model("ScheduledStudent", scheduledSchema);
