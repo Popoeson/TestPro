@@ -351,6 +351,7 @@ app.post("/api/schedule/check", async (req, res) => {
     }
   });
 
+// Download Students List 
 
 app.get("/api/students/download", async (req, res) => {
   try {
@@ -360,9 +361,16 @@ app.get("/api/students/download", async (req, res) => {
       return res.status(404).send("No students found.");
     }
 
-    const fields = ["name", "matricNumber", "department", "email", "phone", "level"];
-    const opts = { fields };
-    const parser = new Parser(opts);
+    const fields = [
+      { label: "Name", value: "name" },
+      { label: "Matric Number", value: "matric" },
+      { label: "Department", value: "department" },
+      { label: "Email", value: "email" },
+      { label: "Phone", value: "phone" },
+      { label: "Level", value: "level" }
+    ];
+
+    const parser = new Parser({ fields });
     const csv = parser.parse(students);
 
     res.header("Content-Type", "text/csv");
@@ -373,7 +381,6 @@ app.get("/api/students/download", async (req, res) => {
     res.status(500).send("Failed to download student list.");
   }
 });
-
   // Create Exam
   app.post("/api/exams", async (req, res) => {
     const { course, courseCode, department, level, duration, numQuestions } = req.body;
