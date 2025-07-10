@@ -536,43 +536,6 @@ app.get("/api/admin/access-groups", async (req, res) => {
 });
 
 // ✅ Toggle global access control ON/OFF
-app.post("/api/admin/toggle-access-control", async (req, res) => {
-  const { enabled } = req.body;
-
-  if (typeof enabled !== "boolean") {
-    return res.status(400).json({ message: "Invalid toggle value." });
-  }
-
-  try {
-    let settings = await Settings.findOne();
-    if (!settings) settings = new Settings();
-
-    settings.accessControlEnabled = enabled;
-    await settings.save();
-
-    res.json({ message: `Access control ${enabled ? "enabled" : "disabled"}` });
-  } catch (err) {
-    console.error("Toggle error:", err);
-    res.status(500).json({ message: "Failed to update access control status." });
-  }
-});
-
-// ✅ Get current access control toggle status
-app.get("/api/admin/access-control-status", async (req, res) => {
-  try {
-    let settings = await Settings.findOne();
-    if (!settings) {
-      settings = new Settings();
-      await settings.save();
-    }
-
-    res.json({ accessControlEnabled: settings.accessControlEnabled });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch access control status." });
-  }
-});
-
-// POST: toggle global access control
 app.post("/api/admin/access-control-toggle", async (req, res) => {
   const { enabled } = req.body;
 
@@ -581,7 +544,7 @@ app.post("/api/admin/access-control-toggle", async (req, res) => {
   }
 
   try {
-    const setting = await Settings.findOneAndUpdate(
+    await Settings.findOneAndUpdate(
       { key: "globalAccessControl" },
       { value: enabled },
       { upsert: true, new: true }
@@ -594,12 +557,13 @@ app.post("/api/admin/access-control-toggle", async (req, res) => {
   }
 });
 
-// GET: fetch current global access control setting
+// ✅ Get current global access control status
 app.get("/api/admin/access-control-toggle", async (req, res) => {
   try {
     const setting = await Settings.findOne({ key: "globalAccessControl" });
-    res.json({ enabled: setting ? setting.value : true });
+    res.json({ enabled: setting ? setting.value : true }); // Default: enabled
   } catch (err) {
+    console.error("Fetch toggle error:", err);
     res.status(500).json({ message: "Failed to retrieve toggle state." });
   }
 });
