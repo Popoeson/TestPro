@@ -488,7 +488,12 @@ app.get("/api/exams/:courseCode", async (req, res) => {
 });
 
   
-//Submission Queue Route
+// Submission Queue
+const submissionQueue = [];
+let activeSubmissions = 0;
+const MAX_CONCURRENT_SUBMISSIONS = 25;
+
+// Process submission queue
 async function processNextSubmission() {
   if (submissionQueue.length === 0 || activeSubmissions >= MAX_CONCURRENT_SUBMISSIONS) return;
 
@@ -498,16 +503,26 @@ async function processNextSubmission() {
   try {
     const { matric, name, department, courseCode, answers } = req.body;
 
-    if (!matric || !courseCode || !Array.isArray(answers)) {
+    if (!matric || !courseCode || typeof answers !== "object" || Array.isArray(answers)) {
       return res.status(400).json({ message: "Missing or invalid submission data." });
     }
 
+    // Check if already submitted
     const existing = await Submission.findOne({ matric, courseCode });
     if (existing) {
       return res.status(409).json({ message: "Submission already exists." });
     }
 
-    await Submission.create({ matric, name, department, courseCode, answers, submittedAt: new Date() });
+    // Save submission
+    await Submission.create({
+      matric,
+      name,
+      department,
+      courseCode,
+      answers,
+      submittedAt: new Date()
+    });
+
     res.status(200).json({ message: "Submitted successfully" });
 
   } catch (err) {
@@ -515,10 +530,11 @@ async function processNextSubmission() {
     res.status(500).json({ message: "Submission failed" });
   } finally {
     activeSubmissions--;
-    processNextSubmission(); // Automatically move to the next in queue
+    processNextSubmission(); // Move to next submission in queue
   }
 }
-//✅ Submit Exam 
+
+// ✅ Submit exam route
 app.post("/api/exams/:courseCode/submit", (req, res) => {
   submissionQueue.push({ req, res });
   processNextSubmission();
