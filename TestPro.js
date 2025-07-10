@@ -11,6 +11,7 @@ const csv = require("csv-writer");
 const XLSX = require("xlsx");
 const axios = require("axios");
 require("dotenv").config();
+const { Parser } = require('json2csv');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -349,6 +350,29 @@ app.post("/api/schedule/check", async (req, res) => {
       res.status(500).json({ message: "Failed to load dashboard" });
     }
   });
+
+
+app.get("/api/students/download", async (req, res) => {
+  try {
+    const students = await Student.find().lean();
+
+    if (!students.length) {
+      return res.status(404).send("No students found.");
+    }
+
+    const fields = ["name", "matricNumber", "department", "email", "phone", "level"];
+    const opts = { fields };
+    const parser = new Parser(opts);
+    const csv = parser.parse(students);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("students.csv");
+    res.send(csv);
+  } catch (err) {
+    console.error("Download error:", err);
+    res.status(500).send("Failed to download student list.");
+  }
+});
 
   // Create Exam
   app.post("/api/exams", async (req, res) => {
