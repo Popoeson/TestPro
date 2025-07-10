@@ -12,11 +12,15 @@ const XLSX = require("xlsx");
 const axios = require("axios");
 require("dotenv").config();
 const { Parser } = require('json2csv');
+const submissionQueue = [];
+let activeSubmissions = 0;
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const MONGO_URI = process.env.MONGO_URI;
+const MAX_CONCURRENT_SUBMISSIONS = 25;
+
 
 // ✅ Middleware
 app.use(express.json());
@@ -530,6 +534,36 @@ app.get("/api/exams/:courseCode", async (req, res) => {
   }
 });
 
+//Submission Queue Route
+async function processNextSubmission() {
+  if (submissionQueue.length === 0 || activeSubmissions >= MAX_CONCURRENT_SUBMISSIONS) return;
+
+  const { req, res } = submissionQueue.shift();
+  activeSubmissions++;
+
+  try {
+    const { matric, name, department, courseCode, answers } = req.body;
+
+    if (!matric || !courseCode || !Array.isArray(answers)) {
+      return res.status(400).json({ message: "Missing or invalid submission data." });
+    }
+
+    const existing = await Submission.findOne({ matric, courseCode });
+    if (existing) {
+      return res.status(409).json({ message: "Submission already exists." });
+    }
+
+    await Submission.create({ matric, name, department, courseCode, answers, submittedAt: new Date() });
+    res.status(200).json({ message: "Submitted successfully" });
+
+  } catch (err) {
+    console.error("Submission error:", err);
+    res.status(500).json({ message: "Submission failed" });
+  } finally {
+    activeSubmissions--;
+    processNextSubmission(); // Automatically move to the next in queue
+  }
+}
 
 // ✅ Save access for a department + level (allow or block)
 app.post("/api/admin/access-control", async (req, res) => {
