@@ -489,10 +489,6 @@ app.get("/api/exams/:courseCode", async (req, res) => {
 
   
 // Submission Queue
-const submissionQueue = [];
-let activeSubmissions = 0;
-const MAX_CONCURRENT_SUBMISSIONS = 25;
-
 // Process submission queue
 async function processNextSubmission() {
   if (submissionQueue.length === 0 || activeSubmissions >= MAX_CONCURRENT_SUBMISSIONS) return;
