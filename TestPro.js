@@ -926,6 +926,23 @@ app.get('/api/payment/verify/:reference', async (req, res) => {
   }
 });
 
+// Validate Email Before Auto-Generating
+app.post('/api/tokens/check-email', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ allowed: false, message: "Invalid email format" });
+  }
+
+  const existingTokens = await Token.find({ studentEmail: email, source: 'manual' });
+
+  if (existingTokens.length >= 2) {
+    return res.status(403).json({ allowed: false, message: "This email has reached the maximum token limit." });
+  }
+
+  res.json({ allowed: true });
+});
+
 // ✅ Save transaction manually
 app.post('/api/transactions/save', async (req, res) => {
   const { email, amount, reference } = req.body;
@@ -942,28 +959,34 @@ app.post('/api/transactions/save', async (req, res) => {
   }
 });
 
+
 // ✅ Generate token manually without payment
 app.post('/api/tokens/generate/manual', async (req, res) => {
-  try {
-    const tokenCode = 'CBT-' + Math.floor(100000 + Math.random() * 900000);
+  const { email } = req.body;
 
-    const newToken = new Token({
-      token: tokenCode,
-      status: 'success',      
-      source: 'manual',    
-      createdAt: new Date()
-    });
-
-    await newToken.save();
-
-    res.json({
-      message: 'Token generated successfully (manual)',
-      token: tokenCode,
-    });
-  } catch (err) {
-    console.error("Manual token generation error:", err.message);
-    res.status(500).json({ message: "Failed to generate token manually" });
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ message: "Invalid email" });
   }
+
+  const count = await Token.countDocuments({ studentEmail: email, source: 'manual' });
+
+  if (count >= 2) {
+    return res.status(403).json({ message: "This email has already generated 2 tokens." });
+  }
+
+  const tokenCode = 'CBT-' + Math.floor(100000 + Math.random() * 900000);
+
+  const newToken = new Token({
+    studentEmail: email,
+    token: tokenCode,
+    source: 'manual',
+    status: 'success',
+    createdAt: new Date()
+  });
+
+  await newToken.save();
+
+  res.json({ token: tokenCode });
 });
 
 // ✅ Get all tokens
