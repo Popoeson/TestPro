@@ -95,8 +95,10 @@ const questionSchema = new mongoose.Schema({
 const resultSchema = new mongoose.Schema({
   studentMatric: String,
   courseCode: String,
-  score: Number,
-  total: Number,
+  score: Number,          
+  total: Number,          
+  caScore: Number,        
+  totalScore: Number,     
   timestamp: { type: Date, default: Date.now },
 });
 
@@ -547,27 +549,23 @@ async function processNextSubmission() {
       }
     });
 
-    // ✅ Save to Result model
-    const resultExists = await Result.findOne({ studentMatric: matric, courseCode });
-    if (!resultExists) {
-      await Result.create({
-        studentMatric: matric,
-        courseCode,
-        score,
-        total: questions.length,
-      });
-    }
+    // ✅ Generate random CA score between 20 and 35
+const caScore = Math.floor(Math.random() * (35 - 20 + 1)) + 20;
+const totalScore = score + caScore;
 
-    res.status(200).json({ message: "Exam submitted successfully", score, total: questions.length });
-
-  } catch (err) {
-    console.error("Submission error:", err);
-    res.status(500).json({ message: "Submission failed" });
-  } finally {
-    activeSubmissions--;
-    processNextSubmission(); // Move to next in queue
+// ✅ Save to Result model
+const resultExists = await Result.findOne({ studentMatric: matric, courseCode });
+if (!resultExists) {
+  await Result.create({
+    studentMatric: matric,
+    courseCode,
+    score,
+    total: questions.length,
+    caScore,
+    totalScore
+  });
   }
-     }
+    
 // ✅ Submit exam route
 app.post("/api/exams/:courseCode/submit", (req, res) => {
   submissionQueue.push({ req, res });
