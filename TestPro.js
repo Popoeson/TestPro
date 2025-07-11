@@ -708,68 +708,75 @@ app.delete("/api/schedule/clear", async (req, res) => {
   }
 });
 
-  // Get JSON results with student details
-  app.get("/api/results", async (req, res) => {
-    try {
-      const results = await Result.find();
-      const students = await Student.find();
+  // ✅ Get JSON results with full score details
+app.get("/api/results", async (req, res) => {
+  try {
+    const results = await Result.find();
+    const students = await Student.find();
 
-      const enriched = results.map(result => {
-        const student = students.find(s => s.matric === result.studentMatric);
-        return {
-          name: student?.name || "Unknown",
-          matric: result.studentMatric,
-          department: student?.department || "Unknown",
-          courseCode: result.courseCode,
-          score: result.score,
-          total: result.total,
-        };
-      });
+    const enriched = results.map(result => {
+      const student = students.find(s => s.matric === result.studentMatric);
+      return {
+        name: student?.name || "Unknown",
+        matric: result.studentMatric,
+        department: student?.department || "Unknown",
+        courseCode: result.courseCode,
+        caScore: result.caScore || 0,
+        score: result.score,
+        totalScore: result.totalScore || (result.score || 0),
+      };
+    });
 
-      res.json(enriched);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch results" });
-    }
-  });
+    res.json(enriched);
+  } catch (err) {
+    console.error("Failed to fetch results:", err);
+    res.status(500).json({ error: "Failed to fetch results" });
+  }
+});
 
-  // Download results as CSV
-  app.get("/api/results/download", async (req, res) => {
-    try {
-      const submissions = await Result.find();
-      const students = await Student.find();
+// ✅ Download results with CA, Exam, and Total
+app.get("/api/results/download", async (req, res) => {
+  try {
+    const submissions = await Result.find();
+    const students = await Student.find();
 
-      const records = submissions.map(sub => {
-        const student = students.find(s => s.matric === sub.studentMatric);
-        return {
-          Name: student?.name || "",
-          Matric: sub.studentMatric,
-          Department: student?.department || "",
-          CourseCode: sub.courseCode,
-          Score: sub.score,
-        };
-      });
+    const records = submissions.map(sub => {
+      const student = students.find(s => s.matric === sub.studentMatric);
+      return {
+        Name: student?.name || "",
+        Matric: sub.studentMatric,
+        Department: student?.department || "",
+        CourseCode: sub.courseCode,
+        CAScore: sub.caScore || 0,
+        ExamScore: sub.score || 0,
+        TotalScore: sub.totalScore || (sub.score || 0),
+      };
+    });
 
-      const filePath = path.join(__dirname, "results.csv");
-      const writer = csv.createObjectCsvWriter({
-        path: filePath,
-        header: [
-          { id: "Name", title: "Name" },
-          { id: "Matric", title: "Matric" },
-          { id: "Department", title: "Department" },
-          { id: "CourseCode", title: "Course Code" },
-          { id: "Score", title: "Score" },
-        ],
-      });
+    const filePath = path.join(__dirname, "results.csv");
+    const writer = csv.createObjectCsvWriter({
+      path: filePath,
+      header: [
+        { id: "Name", title: "Name" },
+        { id: "Matric", title: "Matric" },
+        { id: "Department", title: "Department" },
+        { id: "CourseCode", title: "Course Code" },
+        { id: "CAScore", title: "CA Score" },
+        { id: "ExamScore", title: "Exam Score" },
+        { id: "TotalScore", title: "Total Score" },
+      ],
+    });
 
-      await writer.writeRecords(records);
+    await writer.writeRecords(records);
 
-      res.download(filePath, "results.csv", (err) => {
-        if (!err) fs.unlinkSync(filePath);
-      });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to generate result CSV" });
-    }
-  });
+    res.download(filePath, "results.csv", (err) => {
+      if (!err) fs.unlinkSync(filePath);
+    });
+  } catch (error) {
+    console.error("CSV download error:", error);
+    res.status(500).json({ error: "Failed to generate result CSV" });
+  }
+});
 
 // Admin Registration Route
 app.post('/api/admin/register', async (req, res) => {
