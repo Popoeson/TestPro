@@ -205,24 +205,27 @@ function getDepartmentAndLevelFromMatric(matric) {
     };
   }
       }
-  //Student Registration 
-  app.post("/api/students/register", upload.single("passport"), async (req, res) => {
-  const { name, matric, phone, email, password, token, level } = req.body;
+  // Student Registration
+app.post("/api/students/register", upload.single("passport"), async (req, res) => {
+  let { name, matric, phone, email, password, token, level } = req.body;
   const passport = req.file ? req.file.filename : null;
 
   if (!name || !matric || !phone || !email || !password || !passport || !token || !level) {
     return res.status(400).json({ message: "All fields and token are required." });
   }
 
+  // Convert matric to uppercase (case-insensitive handling)
+  matric = matric.toUpperCase();
+
   try {
-    // Check token validity
+    // ✅ Check token validity
     const validToken = await Token.findOne({ token, status: 'success' });
 
     if (!validToken) {
       return res.status(400).json({ message: "Invalid or already used token." });
     }
 
-    // Check for duplicates
+    // ✅ Check for duplicates (matric and email)
     const existingStudent = await Student.findOne({
       $or: [{ matric }, { email }]
     });
@@ -236,15 +239,15 @@ function getDepartmentAndLevelFromMatric(matric) {
       });
     }
 
-    // Detect department and level
+    // ✅ Detect department and level
     const { department } = getDepartmentAndLevelFromMatric(matric);
 
-    // Save student
+    // ✅ Save student
     const newStudent = new Student({
       name,
-      matric,
+      matric, 
       department,
-      level, // <-- save the level too
+      level,
       phone,
       email,
       password,
@@ -253,21 +256,25 @@ function getDepartmentAndLevelFromMatric(matric) {
 
     await newStudent.save();
 
-    // Mark token as used
+    // ✅ Mark token as used
     validToken.status = 'used';
     await validToken.save();
 
     res.status(201).json({ message: "Student registered successfully." });
 
   } catch (err) {
-  console.error("Error registering student:", err);
-  res.status(500).json({ message: err.message || "Server error" });
+    console.error("Error registering student:", err);
+    res.status(500).json({ message: err.message || "Server error" });
   }
 });
+  
 
 // Student Login
 app.post("/api/students/login", async (req, res) => {
-  const { matric, password } = req.body;
+  let { matric, password } = req.body;
+
+  // ✅ Convert to uppercase to handle case-insensitive matching
+  matric = matric.toUpperCase();
 
   // 1. ✅ Check session status
   const session = await SessionControl.findOne();
