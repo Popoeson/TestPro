@@ -515,9 +515,7 @@ app.get("/api/exams/:courseCode", async (req, res) => {
 });
 
   
-// Submission Queue
-// Process submission queue
-
+// ✅ Process submission queue
 async function processNextSubmission() {
   if (submissionQueue.length === 0 || activeSubmissions >= MAX_CONCURRENT_SUBMISSIONS) return;
 
@@ -531,7 +529,7 @@ async function processNextSubmission() {
       return res.status(400).json({ message: "Missing or invalid submission data." });
     }
 
-    // Check if already submitted
+    // ✅ Check if already submitted
     const existing = await Submission.findOne({ matric, courseCode });
     if (existing) {
       return res.status(409).json({ message: "Submission already exists." });
@@ -550,22 +548,33 @@ async function processNextSubmission() {
     });
 
     // ✅ Generate random CA score between 20 and 35
-const caScore = Math.floor(Math.random() * (35 - 20 + 1)) + 20;
-const totalScore = score + caScore;
+    const caScore = Math.floor(Math.random() * (35 - 20 + 1)) + 20;
+    const totalScore = score + caScore;
 
-// ✅ Save to Result model
-const resultExists = await Result.findOne({ studentMatric: matric, courseCode });
-if (!resultExists) {
-  await Result.create({
-    studentMatric: matric,
-    courseCode,
-    score,
-    total: questions.length,
-    caScore,
-    totalScore
-  });
+    // ✅ Save to Result model
+    const resultExists = await Result.findOne({ studentMatric: matric, courseCode });
+    if (!resultExists) {
+      await Result.create({
+        studentMatric: matric,
+        courseCode,
+        score,
+        total: questions.length,
+        caScore,
+        totalScore
+      });
+    }
+
+    res.status(200).json({ message: "Exam submitted successfully", score, total: questions.length, caScore, totalScore });
+
+  } catch (err) {
+    console.error("Submission error:", err);
+    res.status(500).json({ message: "Submission failed" });
+  } finally {
+    activeSubmissions--;
+    processNextSubmission(); // process next in queue
   }
-    
+}
+
 // ✅ Submit exam route
 app.post("/api/exams/:courseCode/submit", (req, res) => {
   submissionQueue.push({ req, res });
