@@ -212,8 +212,8 @@ app.post("/api/students/register", upload.single("passport"), async (req, res) =
   let { name, matric, phone, email, password, token, level } = req.body;
   const passport = req.file ? req.file.filename : null;
 
-  if (!name || !matric || !phone || !email || !password || !passport || !token || !level) {
-    return res.status(400).json({ message: "All fields and token are required." });
+  if (!name || !matric || !phone || !email || !password || !token || !level) {
+  return res.status(400).json({ message: "All fields except passport are required." });
   }
 
   // Convert matric to uppercase (case-insensitive handling)
