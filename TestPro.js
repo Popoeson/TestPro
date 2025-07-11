@@ -124,7 +124,6 @@ const transactionSchema = new mongoose.Schema({
   status: { type: String, default: 'pending' },
   createdAt: { type: Date, default: Date.now },
 });
-
 const tokenSchema = new mongoose.Schema({
   studentName: String,
   studentEmail: String,
@@ -132,8 +131,10 @@ const tokenSchema = new mongoose.Schema({
   reference: String,
   token: String,
   status: { type: String, enum: ['pending', 'success', 'used'], default: 'pending' },
+  source: { type: String, enum: ['payment', 'manual'], default: 'manual' }, // ✅ NEW
   createdAt: { type: Date, default: Date.now },
 });
+
 const adminSchema = new mongoose.Schema({
   username: String,
   password: String,
@@ -938,6 +939,30 @@ app.post('/api/transactions/save', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to save transaction' });
+  }
+});
+
+// ✅ Generate token manually without payment
+app.post('/api/tokens/generate/manual', async (req, res) => {
+  try {
+    const tokenCode = 'CBT-' + Math.floor(100000 + Math.random() * 900000);
+
+    const newToken = new Token({
+      token: tokenCode,
+      status: 'success',      
+      source: 'manual',    
+      createdAt: new Date()
+    });
+
+    await newToken.save();
+
+    res.json({
+      message: 'Token generated successfully (manual)',
+      token: tokenCode,
+    });
+  } catch (err) {
+    console.error("Manual token generation error:", err.message);
+    res.status(500).json({ message: "Failed to generate token manually" });
   }
 });
 
