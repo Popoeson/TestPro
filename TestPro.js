@@ -189,14 +189,14 @@ function getDepartmentAndLevelFromMatric(matric) {
     const prefix = matric.split("/")[0];
     const ndMap = {
       "S": "Science Laboratory Technology",
-      "Cos": "Computer Science",
-      "Coe": "Computer Engineering",
+      "COS": "Computer Science",
+      "COE": "Computer Engineering",
       "B": "Business Administration",
-      "Est": "Estate Management",
+      "ESt": "Estate Management",
       "E": "Electrical Engineering",
       "M": "Mass Communication",
       "A": "Accountancy",
-      "Mlt": "Medical Laboratory Technology"
+      "MLT": "Medical Laboratory Technology"
     };
 
     return {
