@@ -194,7 +194,7 @@ function getDepartmentAndLevelFromMatric(matric) {
       "COS": "Computer Science",
       "COE": "Computer Engineering",
       "B": "Business Administration",
-      "ESt": "Estate Management",
+      "EST": "Estate Management",
       "E": "Electrical Engineering",
       "M": "Mass Communication",
       "A": "Accountancy",
@@ -217,24 +217,23 @@ app.post("/api/students/register", upload.single("passport"), async (req, res) =
     // Convert matric to uppercase
     matric = matric.toUpperCase();
 
-    // Basic validation
-    
-if (!name || !matric || !phone || !email || !password || !passport || !token || !level) {
-  return res.status(400).json({ message: "All fields and token are required." });
+    // ✅ Validate all required fields
+    if (!name || !matric || !phone || !email || !password || !confirmPassword || !passport || !token || !level) {
+      return res.status(400).json({ message: "All fields and token are required." });
     }
 
-    // Password confirmation
+    // ✅ Confirm password match
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match." });
     }
 
-    // ✅ Check token validity
+    // ✅ Check if token is valid and unused
     const validToken = await Token.findOne({ token, status: "success" });
     if (!validToken) {
       return res.status(400).json({ message: "Invalid or already used token." });
     }
 
-    // ✅ Check for duplicates
+    // ✅ Check for duplicates (matric or email)
     const existingStudent = await Student.findOne({ $or: [{ matric }, { email }] });
     if (existingStudent) {
       return res.status(409).json({
@@ -244,10 +243,10 @@ if (!name || !matric || !phone || !email || !password || !passport || !token || 
       });
     }
 
-    // ✅ Detect department
+    // ✅ Detect department from matric prefix
     const { department } = getDepartmentAndLevelFromMatric(matric);
 
-    // ✅ Save new student
+    // ✅ Save new student with plain text password
     const newStudent = new Student({
       name,
       matric,
@@ -255,29 +254,24 @@ if (!name || !matric || !phone || !email || !password || !passport || !token || 
       level,
       phone,
       email,
-      password, // 🔓 Stored as plain text
+      password, 
       passport
     });
 
-    await newStudent.save()
-      .then(() => console.log("✅ Student saved:", email))
-      .catch((err) => {
-        console.log("❌ Failed to save student:", email, err.message);
-        throw err;
-      });
+    await newStudent.save();
 
-    // ✅ Mark token as used only after successful save
+    // ✅ Mark token as used
     validToken.status = "used";
     await validToken.save();
 
     res.status(201).json({ message: "Student registered successfully." });
 
   } catch (err) {
-    console.error("🚨 Fatal error:", err.message);
+    console.error("🚨 Registration error:", err.message);
     if (err.code === 11000) {
       return res.status(409).json({ message: "Email or Matric already exists." });
     }
-    res.status(500).json({ message: err.message || "Server error" });
+    res.status(500).json({ message: "An error occurred. Please try again." });
   }
 });
 
