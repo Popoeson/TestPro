@@ -275,6 +275,67 @@ app.post("/api/students/register", upload.single("passport"), async (req, res) =
   }
 });
 
+// Register Student via JSON for Load Testing (no passport upload)
+app.post("/api/students/register-json", async (req, res) => {
+  try {
+    let { name, matric, phone, email, password, token, level } = req.body;
+
+    // Convert matric to uppercase
+    matric = matric.toUpperCase();
+
+    // Basic validation
+    if (!name || !matric || !phone || !email || !password || !token || !level) {
+      return res.status(400).json({ message: "All fields and token are required." });
+    }
+
+    // ✅ Token validation (real, one-time use)
+    const validToken = await Token.findOne({ token, status: "success" });
+    if (!validToken) {
+      return res.status(400).json({ message: "Invalid or already used token." });
+    }
+
+    // ✅ Prevent duplicates
+    const existingStudent = await Student.findOne({ $or: [{ matric }, { email }] });
+    if (existingStudent) {
+      return res.status(409).json({
+        message: existingStudent.matric === matric
+          ? "A student with this matric number already exists."
+          : "A student with this email already exists."
+      });
+    }
+
+    // ✅ Department detection
+    const { department } = getDepartmentAndLevelFromMatric(matric);
+
+    // ✅ Save dummy passport for testing
+    const newStudent = new Student({
+      name,
+      matric,
+      department,
+      level,
+      phone,
+      email,
+      password,
+      passport: "k6_dummy.jpg"
+    });
+
+    await newStudent.save();
+
+    // ✅ Mark token as used
+    validToken.status = "used";
+    await validToken.save();
+
+    res.status(201).json({ message: "Student registered successfully (JSON)." });
+
+  } catch (err) {
+    console.error("🔥 Registration error:", err.message);
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "Email or Matric already exists." });
+    }
+    res.status(500).json({ message: err.message || "Server error" });
+  }
+});
+
 // Student Login
 app.post("/api/students/login", async (req, res) => {
   let { matric, password } = req.body;
