@@ -218,8 +218,9 @@ app.post("/api/students/register", upload.single("passport"), async (req, res) =
     matric = matric.toUpperCase();
 
     // Basic validation
-    if (!name || !matric || !phone || !email || !password || !confirmPassword || !token || !level) {
-      return res.status(400).json({ message: "All fields except passport are required." });
+    
+if (!name || !matric || !phone || !email || !password || !passport || !token || !level) {
+  return res.status(400).json({ message: "All fields and token are required." });
     }
 
     // Password confirmation
