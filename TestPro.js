@@ -378,6 +378,34 @@ app.post("/api/students/login", async (req, res) => {
   res.json({ message: "Login successful", student });
 });
 
+// TEST Login route for load testing (no hashing)
+app.post("/api/students/test-login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required." });
+    }
+
+    // Only match from test accounts (optional)
+    const student = await Student.findOne({ email });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+
+    if (student.password !== password) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    res.status(200).json({ message: "Login successful", student });
+
+  } catch (err) {
+    console.error("Test login error:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Start or Stop Exam Session (POST)
 app.post("/api/schedule/session", async (req, res) => {
   const { active } = req.body;
