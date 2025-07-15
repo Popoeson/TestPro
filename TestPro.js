@@ -657,7 +657,7 @@ async function processNextSubmission() {
       });
     }
 
-    res.status(200).json({ message: "Exam submitted successfully", score, total: questions.length, caScore, totalScore });
+    res.status(200).json({ message: "Exam submitted successfully" });
 
   } catch (err) {
     console.error("Submission error:", err);
