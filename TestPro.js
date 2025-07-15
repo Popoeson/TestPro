@@ -927,12 +927,12 @@ app.post('/api/split/create', async (req, res) => {
         currency: 'NGN',
         subaccounts: [
           {
-            subaccount: 'ACCT_pm10n7jnq0ov8e5',
+            subaccount: 'ACCT_370jqx88t6rgcz4',
             share: 70
           }
         ],
-        bearer_type: 'subaccount', // ✅ Subaccount pays Paystack fee
-        bearer_subaccount: 'ACCT_pm10n7jnq0ov8e5' // ✅ Fee is charged to this subaccount
+        bearer_type: 'subaccount', // ✅ Subaccount bears the transaction fee
+        bearer_subaccount: 'ACCT_370jqx88t6rgcz4'
       },
       {
         headers: {
@@ -953,8 +953,9 @@ app.post('/api/split/create', async (req, res) => {
       error: 'Failed to create split group',
       details: error.response?.data || error.message
     });
-  } 
+  }
 });
+
 
 // ✅ Initialize payment for Paystack popup (NO callback_url)
 app.post('/api/payment/initialize', async (req, res) => {
