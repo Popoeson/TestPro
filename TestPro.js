@@ -965,7 +965,7 @@ app.post('/api/payment/initialize', async (req, res) => {
     const response = await axios.post('https://api.paystack.co/transaction/initialize', {
       email,
       amount: amount * 100,
-      split_code: 'SPL_Ign6KoMszo'
+      split_code: 'SPL_wRVJKCtJsj'
     }, {
       headers: {
         Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
