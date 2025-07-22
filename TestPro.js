@@ -558,16 +558,21 @@ app.get("/api/students/download", async (req, res) => {
     res.json({ message: "Questions saved successfully" });
   });
 
-  // List Exams
-  app.get("/api/exams", async (req, res) => {
-    try {
-      const exams = await Exam.find();
-      res.json(exams);
-    } catch (err) {
-      res.status(500).json({ message: "Unable to fetch exam list." });
-    }
-  });
+// Filtered Exam List
+app.get("/api/exams", async (req, res) => {
+  const { department, level } = req.query;
 
+  try {
+    const filter = {};
+    if (department) filter.department = department;
+    if (level) filter.level = level;
+
+    const exams = await Exam.find(filter);
+    res.json(exams);
+  } catch (err) {
+    res.status(500).json({ message: "Unable to fetch exam list." });
+  }
+});
   // Get Course List for Frontend
   app.get("/api/questions/courses", async (req, res) => {
     try {
