@@ -573,21 +573,25 @@ app.get("/api/exams", async (req, res) => {
     res.status(500).json({ message: "Unable to fetch exam list." });
   }
 });
-  // Get Course List for Frontend
-  app.get("/api/questions/courses", async (req, res) => {
-    try {
-      const exams = await Exam.find({}, "course courseCode");
-      const courses = exams.map((exam) => ({
-        title: exam.course,
-        code: exam.courseCode
-      }));
+ 
+// Get Course List for Frontend
+app.get("/api/questions/courses", async (req, res) => {
+  try {
+    // Retrieve courses including department and level
+    const exams = await Exam.find({}, "course courseCode department level");
+    
+    const courses = exams.map((exam) => ({
+      title: exam.course,
+      code: exam.courseCode,
+      department: exam.department,
+      level: exam.level
+    }));
 
-      res.json({ courses });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch courses." });
-    }
-  });
-
+    res.json({ courses });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch courses." });
+  }
+});
 
   // Load Questions for a Course
   app.get("/api/exams/:courseCode/questions", async (req, res) => {
