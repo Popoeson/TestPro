@@ -1238,7 +1238,40 @@ app.patch('/api/tokens/mark-used/:token', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+// POST /api/public/login
+app.post("/api/public/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    const publicUser = await Public.findOne({ email });
+
+    if (!publicUser) {
+      return res.status(404).json({ message: "No user found with this email." });
+    }
+
+    if (publicUser.password !== password) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: publicUser._id,
+        name: publicUser.name,
+        email: publicUser.email,
+        phone: publicUser.phone,
+        type: "public"
+      }
+    });
+  } catch (error) {
+    console.error("Public login error:", error.message);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+});
 
 // 🟢 Default Route
 app.get("/", (req, res) => {
