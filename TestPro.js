@@ -147,6 +147,16 @@ const settingsSchema = new mongoose.Schema({
   value: mongoose.Schema.Types.Mixed
 });
 
+const publicUserSchema = new mongoose.Schema({
+  name: String,
+  phone: { type: String, unique: true },
+  email: { type: String, unique: true },
+  password: String,
+  passport: String,
+  registeredAt: { type: Date, default: Date.now }
+});
+
+
 // ✅ MODELS
 const Student = mongoose.model("Student", studentSchema);
 const Exam = mongoose.model("Exam", examSchema);
@@ -161,6 +171,7 @@ const Token = mongoose.model("Token", tokenSchema);
 const studentSessions = new Set();
 const Admin = mongoose.model("Admin", adminSchema);
 const Settings = mongoose.model("Settings", settingsSchema);
+const PublicUser = mongoose.model("PublicUser", publicUserSchema);
 // Routes
 
 // Department mapping
@@ -1145,6 +1156,67 @@ app.get('/api/tokens/validate/:token', async (req, res) => {
   }
 });
 
+
+// =======================
+// Public Registration Route
+// =======================
+app.post("/api/public/register", upload.single("passport"), async (req, res) => {
+  try {
+    const { name, phone, email, password, confirmPassword, token } = req.body;
+    const passport = req.file ? req.file.filename : null;
+
+    // ✅ Validate all required fields
+    if (!name || !phone || !email || !password || !confirmPassword || !passport || !token) {
+      return res.status(400).json({ message: "All fields and token are required." });
+    }
+
+    // ✅ Confirm password match
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match." });
+    }
+
+    // ✅ Check if token is valid and unused
+    const validToken = await Token.findOne({ token, status: "success" });
+    if (!validToken) {
+      return res.status(400).json({ message: "Invalid or already used token." });
+    }
+
+    // ✅ Check for duplicate email or phone
+    const existingUser = await PublicUser.findOne({ $or: [{ email }, { phone }] });
+    if (existingUser) {
+      return res.status(409).json({
+        message: existingUser.email === email
+          ? "A user with this email already exists."
+          : "A user with this phone number already exists."
+      });
+    }
+
+    // ✅ Save new public user
+    const newUser = new PublicUser({
+      name,
+      phone,
+      email,
+      password,
+      passport
+    });
+
+    await newUser.save();
+
+    // ✅ Mark token as used
+    validToken.status = "used";
+    await validToken.save();
+
+    res.status(201).json({ message: "Public user registered successfully." });
+
+  } catch (err) {
+    console.error("🚨 Public Registration error:", err.message);
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "Email or phone already exists." });
+    }
+    res.status(500).json({ message: "An error occurred. Please try again." });
+  }
+});
+
 // ✅ Mark token as used
 app.patch('/api/tokens/mark-used/:token', async (req, res) => {
   const { token } = req.params;
@@ -1166,6 +1238,7 @@ app.patch('/api/tokens/mark-used/:token', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 // 🟢 Default Route
 app.get("/", (req, res) => {
