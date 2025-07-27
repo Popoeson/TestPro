@@ -574,17 +574,22 @@ app.get("/api/exams", async (req, res) => {
   const { department, level } = req.query;
 
   try {
-    const filter = {};
-    if (department) filter.department = department;
-    if (level) filter.level = level;
+    let filter = {};
+
+    if (department === "public" || level === "public") {
+      filter = { department: "public", level: "public" }; // Explicitly fetch public exams
+    } else {
+      if (department) filter.department = department;
+      if (level) filter.level = level;
+    }
 
     const exams = await Exam.find(filter);
     res.json(exams);
+
   } catch (err) {
     res.status(500).json({ message: "Unable to fetch exam list." });
   }
 });
- 
 // Get Course List for Frontend
 app.get("/api/questions/courses", async (req, res) => {
   try {
