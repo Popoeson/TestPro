@@ -1239,7 +1239,7 @@ app.patch('/api/tokens/mark-used/:token', async (req, res) => {
   }
 });
 // POST /api/public/login
-const PublicUser = require("../models/public"); // adjust the path if needed
+
 app.post("/api/public/login", async (req, res) => {
   try {
     const { email, password } = req.body;
