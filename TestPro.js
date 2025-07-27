@@ -1239,6 +1239,7 @@ app.patch('/api/tokens/mark-used/:token', async (req, res) => {
   }
 });
 // POST /api/public/login
+const PublicUser = require("../models/public"); // adjust the path if needed
 app.post("/api/public/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -1247,7 +1248,7 @@ app.post("/api/public/login", async (req, res) => {
       return res.status(400).json({ message: "Email and password are required." });
     }
 
-    const publicUser = await Public.findOne({ email });
+    const publicUser = await PublicUser.findOne({ email });
 
     if (!publicUser) {
       return res.status(404).json({ message: "No user found with this email." });
