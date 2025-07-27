@@ -1273,6 +1273,53 @@ app.post("/api/public/login", async (req, res) => {
   }
 });
 
+// Public Users Dashboard
+app.get("/api/public-users/dashboard", async (req, res) => {
+  try {
+    const publicUsers = await PublicUser.find().select("-password");
+
+    const formatted = publicUsers.map((user) => ({
+      ...user._doc,
+      passport: user.passport ? `${req.protocol}://${req.get("host")}/uploads/${user.passport}` : null,
+    }));
+
+    res.json({
+      publicUsers: formatted,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    res.status(500).json({ message: "Failed to load public user dashboard" });
+  }
+});
+
+// Download Public Users List
+app.get("/api/public-users/download", async (req, res) => {
+  try {
+    const publicUsers = await PublicUser.find().lean();
+
+    if (!publicUsers.length) {
+      return res.status(404).send("No public users found.");
+    }
+
+    const fields = [
+      { label: "Name", value: "name" },
+      { label: "Email", value: "email" },
+      { label: "Phone", value: "phone" },
+      { label: "Date Registered", value: "createdAt" }
+    ];
+
+    const parser = new Parser({ fields });
+    const csv = parser.parse(publicUsers);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("public-users.csv");
+    res.send(csv);
+  } catch (err) {
+    console.error("Download error:", err);
+    res.status(500).send("Failed to download public user list.");
+  }
+});
+
 // 🟢 Default Route
 app.get("/", (req, res) => {
   res.send("✅ CBT System + Payment API is running!");
