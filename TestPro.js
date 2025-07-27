@@ -1259,7 +1259,7 @@ app.post("/api/public/login", async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      user: {
+      publicUser: {
         id: publicUser._id,
         name: publicUser.name,
         email: publicUser.email,
