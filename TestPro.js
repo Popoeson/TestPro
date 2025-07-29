@@ -627,18 +627,18 @@ app.get("/api/exams/:courseCode/questions", async (req, res) => {
   }
 });
 // Load exam info  and duration
+
 app.get("/api/exams/:courseCode", async (req, res) => {
-  const { courseCode } = req.params;
+  const rawCode = req.params.courseCode;
   try {
-    const exam = await Exam.findOne({ courseCode });
+    const courseCode = rawCode.trim().toLowerCase();
+    const exam = await Exam.findOne({ courseCode: { $regex: new RegExp(`^${courseCode}$`, 'i') } });
     if (!exam) return res.status(404).json({ message: "Exam not found" });
     res.json({ exam });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch exam settings" });
   }
 });
-
-  
 // ✅ Process submission queue
 async function processNextSubmission() {
   if (submissionQueue.length === 0 || activeSubmissions >= MAX_CONCURRENT_SUBMISSIONS) return;
