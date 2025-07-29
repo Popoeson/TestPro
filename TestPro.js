@@ -26,7 +26,16 @@ const MAX_CONCURRENT_SUBMISSIONS = 25;
 app.use(express.json());
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
-app.use(cors({ origin: '*', credentials: true }));
+//app.use(cors({ origin: '*', credentials: true }));
+//const cors = require("cors");
+
+app.use(cors({
+  origin: [
+    "https://cbt-system-vert.vercel.app",  // Allow your Vercel frontend
+    "http://localhost:3000"                // Optional: For local development
+  ],
+  credentials: true
+}));
 
 // ✅ Ensure upload directories exist
 const uploadDir = path.join(__dirname, "uploads");
