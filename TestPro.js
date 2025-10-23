@@ -999,28 +999,66 @@ app.post('/api/split/create', async (req, res) => {
 
 
 // ✅ Initialize payment for Paystack popup (NO callback_url)
+// app.post('/api/payment/initialize', async (req, res) => {
+//  const { email, amount } = req.body;
+
+//  try {
+//   const response = await axios.post('https://api.paystack.co/transaction/initialize', {
+//      email,
+ //     amount: amount * 100,
+//      split_code: 'SPL_wRVJKCtJsj'
+  //  }, {
+ //     headers: {
+  //      Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+   //     'Content-Type': 'application/json',
+   //   },
+   // });
+
+ //   const { authorization_url, reference } = response.data.data;
+
+//    await Transaction.create({ email, amount, reference });
+ //   res.json({ authorization_url, reference });
+ // } catch (error) {
+  //  console.error("Init error:", error.response?.data || error.message);
+ //   res.status(500).json({ error: 'Payment initialization failed' });
+//  }
+// });
+
+  // ✅ Initialize payment for Paystack popup (NO split_code)
 app.post('/api/payment/initialize', async (req, res) => {
   const { email, amount } = req.body;
 
   try {
-    const response = await axios.post('https://api.paystack.co/transaction/initialize', {
-      email,
-      amount: amount * 100,
-      split_code: 'SPL_wRVJKCtJsj'
-    }, {
-      headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        'Content-Type': 'application/json',
+    // 🔹 Make request to Paystack initialize endpoint
+    const response = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        email,
+        amount: amount * 100, // Paystack expects amount in kobo
       },
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
+    // 🔹 Destructure the required details
     const { authorization_url, reference } = response.data.data;
 
+    // 🔹 Save transaction in database
     await Transaction.create({ email, amount, reference });
+
+    // 🔹 Send data back to frontend
     res.json({ authorization_url, reference });
   } catch (error) {
-    console.error("Init error:", error.response?.data || error.message);
-    res.status(500).json({ error: 'Payment initialization failed' });
+    console.error("Init error details:", error.response?.data || error.message);
+
+    res.status(500).json({
+      error: 'Payment initialization failed',
+      details: error.response?.data || error.message,
+    });
   }
 });
 
