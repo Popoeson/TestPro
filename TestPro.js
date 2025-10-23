@@ -32,7 +32,8 @@ app.use("/uploads", express.static("uploads"));
 app.use(cors({
   origin: [
     "https://cbt-system-vert.vercel.app",  // Allow your Vercel frontend
-    "http://localhost:3000"                // Optional: For local development
+    "https://cbt-token-purchase.vercel.app",
+    "http://localhost:8080"                // Optional: For local development
   ],
   credentials: true
 }));
