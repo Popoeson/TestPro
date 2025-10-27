@@ -619,6 +619,26 @@ app.get("/api/questions/courses", async (req, res) => {
   }
 });
 
+// ✅ Delete Exam by courseCode
+app.delete("/api/exams/:courseCode", async (req, res) => {
+  try {
+    const { courseCode } = req.params;
+
+    const exam = await Exam.findOneAndDelete({ courseCode });
+    if (!exam) {
+      return res.status(404).json({ message: "Exam not found." });
+    }
+
+    // Optionally delete its questions too:
+    await Question.deleteMany({ courseCode });
+
+    res.json({ message: "Exam deleted successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
   // Load Questions for a Course
   
 app.get("/api/exams/:courseCode/questions", async (req, res) => {
