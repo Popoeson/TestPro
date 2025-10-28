@@ -422,23 +422,39 @@ app.post("/api/schedule/check", async (req, res) => {
   }
 });
 
-  // Student Dashboard
-  app.get("/api/students/dashboard", async (req, res) => {
-    try {
-      const students = await Student.find().select("-password");
-      const formatted = students.map((s) => ({
-        ...s._doc,
-        passport: s.passport ? `${req.protocol}://${req.get("host")}/uploads/${s.passport}` : null
-      }));
+// Student Dashboard
+app.get("/api/students/dashboard", async (req, res) => {
+  try {
+    const students = await Student.find().select("-password");
 
-      res.json({
-        students: formatted,
-        sessions: Array.from(studentSessions),
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to load dashboard" });
-    }
-  });
+    const formatted = students.map((s) => {
+      let passportUrl = null;
+
+      if (s.passport) {
+        // ✅ If it's already a full Cloudinary URL, use it as is
+        if (s.passport.startsWith("http")) {
+          passportUrl = s.passport;
+        } else {
+          // ✅ Otherwise, assume it's a local upload
+          passportUrl = `${req.protocol}://${req.get("host")}/uploads/${s.passport}`;
+        }
+      }
+
+      return {
+        ...s._doc,
+        passport: passportUrl,
+      };
+    });
+
+    res.json({
+      students: formatted,
+      sessions: Array.from(studentSessions),
+    });
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+    res.status(500).json({ message: "Failed to load dashboard" });
+  }
+});
 
 // Download Students List 
 
