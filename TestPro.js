@@ -12,6 +12,7 @@ const XLSX = require("xlsx");
 const axios = require("axios");
 require("dotenv").config();
 const { Parser } = require('json2csv');
+import { v2 as cloudinary } from "cloudinary";
 const submissionQueue = [];
 let activeSubmissions = 0;
 
@@ -20,6 +21,11 @@ const PORT = process.env.PORT || 5000;
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const MONGO_URI = process.env.MONGO_URI;
 const MAX_CONCURRENT_SUBMISSIONS = 25;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 
 // ✅ Middleware
