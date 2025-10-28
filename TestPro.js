@@ -12,7 +12,7 @@ const XLSX = require("xlsx");
 const axios = require("axios");
 require("dotenv").config();
 const { Parser } = require('json2csv');
-import { v2 as cloudinary } from "cloudinary";
+import { v2 as cloudinary } = "cloudinary";
 const submissionQueue = [];
 let activeSubmissions = 0;
 
