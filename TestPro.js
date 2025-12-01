@@ -195,7 +195,7 @@ function getDepartmentAndLevelFromMatric(matric) {
   if (matric.startsWith("HND/")) {
     // HND student format: HND/23/01/001
     const parts = matric.split("/");
-    const deptCode = parts[2]; // e.g., "01"
+    const deptCode = parts[1]; // e.g., "01"
 
     const hndMap = {
       "01": "Accountancy",
