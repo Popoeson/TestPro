@@ -190,12 +190,14 @@ const Settings = mongoose.model("Settings", settingsSchema);
 const PublicUser = mongoose.model("PublicUser", publicUserSchema);
 // Routes
 
-// Department mapping
 function getDepartmentAndLevelFromMatric(matric) {
-  if (matric.startsWith("HND/")) {
-    // HND student format: HND/23/01/001
+  // ---------- NEW FORMAT: H24/04/BE/002 ----------
+  // Starts with "H" + 2 digits (year)
+  const newHndPattern = /^H\d{2}\/\d{2}\/[A-Za-z]{2}\/\d{3}$/;
+  
+  if (newHndPattern.test(matric)) {
     const parts = matric.split("/");
-    const deptCode = parts[1]; // e.g., "01"
+    const deptCode = parts[1]; // "04"
 
     const hndMap = {
       "01": "Accountancy",
@@ -212,6 +214,36 @@ function getDepartmentAndLevelFromMatric(matric) {
       department: hndMap[deptCode] || "Unknown",
       level: "HND"
     };
+  }
+
+  // ---------- OLD FORMAT: HND/23/01/001 ----------
+  if (matric.startsWith("HND/")) {
+    const parts = matric.split("/");
+    const deptCode = parts[2]; // old format uses index 2
+
+    const hndMap = {
+      "01": "Accountancy",
+      "02": "Biochemistry",
+      "03": "Business Administration",
+      "04": "Computer Engineering",
+      "05": "Computer Science",
+      "06": "Electrical Engineering",
+      "07": "Mass Communication",
+      "08": "Microbiology"
+    };
+
+    return {
+      department: hndMap[deptCode] || "Unknown",
+      level: "HND"
+    };
+  }
+
+  // ---------- FALLBACK ----------
+  return {
+    department: "Unknown",
+    level: "Unknown"
+  };
+}
 
   } else {
     // ND student format: e.g., Cos/023456
