@@ -188,16 +188,16 @@ const studentSessions = new Set();
 const Admin = mongoose.model("Admin", adminSchema);
 const Settings = mongoose.model("Settings", settingsSchema);
 const PublicUser = mongoose.model("PublicUser", publicUserSchema);
+
 // Routes
 
 function getDepartmentAndLevelFromMatric(matric) {
-  // ---------- NEW FORMAT: H24/04/BE/002 ----------
-  // Starts with "H" + 2 digits (year)
+  // ---------- NEW HND FORMAT: H24/04/BE/002 ----------
   const newHndPattern = /^H\d{2}\/\d{2}\/[A-Za-z]{2}\/\d{3}$/;
-  
+
   if (newHndPattern.test(matric)) {
     const parts = matric.split("/");
-    const deptCode = parts[1]; // "04"
+    const deptCode = parts[1]; // e.g., "04"
 
     const hndMap = {
       "01": "Accountancy",
@@ -216,10 +216,10 @@ function getDepartmentAndLevelFromMatric(matric) {
     };
   }
 
-  // ---------- OLD FORMAT: HND/23/01/001 ----------
+  // ---------- OLD HND FORMAT: HND/23/01/001 ----------
   if (matric.startsWith("HND/")) {
     const parts = matric.split("/");
-    const deptCode = parts[2]; // old format uses index 2
+    const deptCode = parts[2]; // "01"
 
     const hndMap = {
       "01": "Accountancy",
@@ -238,34 +238,26 @@ function getDepartmentAndLevelFromMatric(matric) {
     };
   }
 
-  // ---------- FALLBACK ----------
+  // ---------- ND FORMAT: COS/026001 ----------
+  const prefix = matric.split("/")[0].toUpperCase();
+
+  const ndMap = {
+    "S": "Science Laboratory Technology",
+    "COS": "Computer Science",
+    "COE": "Computer Engineering",
+    "B": "Business Administration",
+    "EST": "Estate Management",
+    "E": "Electrical Engineering",
+    "M": "Mass Communication",
+    "A": "Accountancy",
+    "MLT": "Medical Laboratory Technology"
+  };
+
   return {
-    department: "Unknown",
-    level: "Unknown"
+    department: ndMap[prefix] || "Unknown",
+    level: "ND"
   };
 }
-
-  } else {
-    // ND student format: e.g., Cos/023456
-    const prefix = matric.split("/")[0];
-    const ndMap = {
-      "S": "Science Laboratory Technology",
-      "COS": "Computer Science",
-      "COE": "Computer Engineering",
-      "B": "Business Administration",
-      "EST": "Estate Management",
-      "E": "Electrical Engineering",
-      "M": "Mass Communication",
-      "A": "Accountancy",
-      "MLT": "Medical Laboratory Technology"
-    };
-
-    return {
-      department: ndMap[prefix] || "Unknown",
-      level: "ND"
-    };
-  }
-      }
 
   // Student Registration
 
